@@ -1,0 +1,70 @@
+# -----------------------------
+# 🔧 Node.js / Express backend
+# -----------------------------
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs
+*.log
+*.log.*
+log.txt
+debug.log
+
+# Build and cache
+dist/
+build/
+.cache/
+coverage/
+.next/
+out/
+.DS_Store
+
+# Temporary files and folders
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+
+# OS / IDE junk
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+
+# FFmpeg / Uploads
+uploads/
+temp-frames/
+uploads/thumbnails/
+temp/
+__pycache__/
+
+# Cloudinary (no local media)
+# If Cloudinary is used, prevent local uploads
+uploads/*
+!uploads/.gitkeep
+
+# Mongoose debug dumps
+dump.rdb
+*.pid
+*.seed
+*.pid.lock
+
+# Test output
+test-output/
+reports/
+

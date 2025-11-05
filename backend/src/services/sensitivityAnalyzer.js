@@ -127,7 +127,7 @@ const mockAIAnalysis = async (frames) => {
 const analyzeFrame = async (framePath, index) => {
   await new Promise(res => setTimeout(res, 50 + Math.random() * 100));
   const random = Math.random();
-  if (random < 0.1) {
+  if (random < 0.4) {
     const reasons = [
       'Violence detected',
       'Adult content',

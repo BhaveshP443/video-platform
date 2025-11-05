@@ -19,15 +19,13 @@ const log = (...args) => console.log(`[${new Date().toLocaleTimeString()}]`, ...
 
 /**
  * 🔍 Analyze a video for sensitive content (mock AI + ffmpeg frame extraction)
- * @param {Object} video - Video document from MongoDB
- * @returns {Promise<Object>} analysis result
+ * Simulates a lightweight AI check with semi-randomized flagging for demos.
  */
 export const analyzeSensitivity = async (video) => {
   return new Promise((resolve, reject) => {
     const framesDir = path.join(process.cwd(), 'temp-frames');
     if (!fs.existsSync(framesDir)) fs.mkdirSync(framesDir, { recursive: true });
 
-    // ✅ Use local downloaded file instead of Cloudinary URL
     const localPath = video.path.startsWith('http')
       ? path.join(process.cwd(), 'temp', `${video._id}.mp4`)
       : video.path;
@@ -43,12 +41,11 @@ export const analyzeSensitivity = async (video) => {
     log(`⚙️ Starting sensitivity analysis for ${video._id}`);
     log('🎥 Using local file:', localPath);
 
-    // ✅ Optimize ffmpeg for lightweight frame extraction
     ffmpeg(localPath)
-      .inputOptions(['-t 2']) // only first 2 seconds
+      .inputOptions(['-t 2']) // analyze first 2 seconds only
       .outputOptions([
-        '-vf', 'fps=0.1,scale=320:-1', // very few low-res frames
-        '-q:v', '10', // lower quality = less memory
+        '-vf', 'fps=0.2,scale=320:-1', // fewer frames + lower res
+        '-q:v', '10', 
         '-hide_banner'
       ])
       .output(framePattern)
@@ -61,8 +58,6 @@ export const analyzeSensitivity = async (video) => {
             .map(f => path.join(framesDir, f));
 
           log(`✅ Extracted ${frames.length} frames for analysis`);
-
-          // Simulated lightweight "AI" analysis
           const result = await mockAIAnalysis(frames);
 
           // Cleanup frames
@@ -86,8 +81,7 @@ export const analyzeSensitivity = async (video) => {
 };
 
 /**
- * 🧠 Mock AI analysis
- * Simulates checking extracted frames for sensitive content
+ * 🧠 Mock AI analysis — generates realistic but demo-friendly flagged results
  */
 const mockAIAnalysis = async (frames) => {
   await new Promise(res => setTimeout(res, Math.min(frames.length * 100, 2000)));
@@ -104,11 +98,18 @@ const mockAIAnalysis = async (frames) => {
   const avgSafe = safeScore / Math.max(frames.length - flagged.length, 1);
   const flagRatio = flagged.length / Math.max(frames.length, 1);
 
-  if (flagRatio > 0.15) {
+  log(`🧩 Frame results: ${frames.length} total → ${flagged.length} flagged (ratio=${flagRatio.toFixed(2)})`);
+
+  // ✅ Demo-optimized decision logic
+  if (flagged.length > 0 || Math.random() < 0.35) {
+    // ~35% chance even "clean" videos are flagged (for realism)
+    const reason = flagged[0]?.reason || getRandomReason();
     return {
       status: 'flagged',
-      reason: flagged[0]?.reason || 'Sensitive content detected',
-      confidence: Math.max(...flagged.map(f => f.confidence)),
+      reason,
+      confidence: flagged.length
+        ? Math.max(...flagged.map(f => f.confidence))
+        : 0.9 + Math.random() * 0.05,
       details: { flaggedFrames: flagged.length, totalFrames: frames.length }
     };
   }
@@ -122,21 +123,15 @@ const mockAIAnalysis = async (frames) => {
 };
 
 /**
- * 🧩 Simulate analysis of a single frame
+ * 🧩 Simulate frame-level detection with 30% base probability
  */
 const analyzeFrame = async (framePath, index) => {
   await new Promise(res => setTimeout(res, 50 + Math.random() * 100));
   const random = Math.random();
-  if (random < 0.4) {
-    const reasons = [
-      'Violence detected',
-      'Adult content',
-      'Disturbing imagery',
-      'Hate symbols'
-    ];
+  if (random < 0.3) { // 30% chance per frame
     return {
       flagged: true,
-      reason: reasons[Math.floor(Math.random() * reasons.length)],
+      reason: getRandomReason(),
       confidence: 0.8 + Math.random() * 0.1,
       frameIndex: index
     };
@@ -146,4 +141,19 @@ const analyzeFrame = async (framePath, index) => {
     confidence: 0.85 + Math.random() * 0.1,
     frameIndex: index
   };
+};
+
+/**
+ * 🎯 Helper to randomize reasons for flagged videos
+ */
+const getRandomReason = () => {
+  const reasons = [
+    'Violence detected',
+    'Adult content',
+    'Disturbing imagery',
+    'Hate symbols',
+    'Graphic visuals',
+    'NSFW gesture detected'
+  ];
+  return reasons[Math.floor(Math.random() * reasons.length)];
 };
